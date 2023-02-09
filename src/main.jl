@@ -1,5 +1,5 @@
-num_trials = 3
-our_seed = 24523438
+num_trials = 10000
+our_seed = 42
 
 if length(ARGS) == 1
     num_trials = parse(Int, ARGS[1])
@@ -27,10 +27,22 @@ MimiRFFSPs.datadep"rffsps_v5"
 @everywhere include("include_main.jl")
 
 results = run_dice(our_seed)
-save("Dice_output.csv",results)
+save("output/Dice_output.csv",results)
 
+#print("hello world main")
 results = run_subnatdam(our_seed)
-save("subnnatdam_output.csv",results)
+save("output/subnnatdam_output.csv",results)
+
+#global results_rff_scc = @spawn compute_rff_scc(num_trials, our_seed)
+
+results_subnatdam_scc = compute_subnatdam_scc(num_trials,our_seed)
+compute_figure2_data(results_subnatdam_scc)
+plot_figure2()
+
+#subnat_scc_results = compute_subnatdam_scc(num_trials,our_seed)
+#save("output/subnatdam_scc.csv",scc_results)
+
+
 
 #@sync begin
     #global result_dice_original_scc = @spawn compute_dice_original_scc(our_seed)

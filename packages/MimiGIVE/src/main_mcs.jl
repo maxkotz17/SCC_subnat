@@ -1,5 +1,6 @@
 using Distributions, Dates, Mimi, CSVFiles, DataFrames, MooreAg, StatsBase
 import Mimi: SampleStore, add_RV!, add_transform!, add_save!
+import Mimi: EmpiricalDistribution
 
 """
     get_mcs(trials; 
@@ -25,7 +26,7 @@ that will be run, otherwise it is set to `nothing` and ignored.
 SPs, :random means RFF SPs will be chosen randomly, while :deterministic means they 
 will be based on the provided vector of to `rffsp_sampling_ids` keyword argument. 
 - `rffsp_sampling_ids` - (default nothing) - if `rffsp_sampling` is set to :deterministic, 
-this `n` element vector provides the RFF SP ids that will be run, otherwise it is 
+this `n` element vector provides the RFF SP ids that will be run, otherwise it isd
 set to `nothing` and ignored.
 - `save_list` (default []) - which parameters and varaibles to save for each trial,
 entered as a vector of Tuples (:component_name, :variable_name)
@@ -57,7 +58,7 @@ function get_mcs(trials;
     mcs = @defsim begin
         dice2016R2_damage.a2 = Normal(0.00236, 0.00236/2) # Nordhaus (2017, PNAS) DICE2016 RV 
         #add random climate model selection from 1:21 for the subnational damages
-        model_num = rand(collect(1:1:21))
+        #subnat_damages.modelnum = rand(collect(1:1:21))
     end
 
     # Howard and Sterner (2017) Damage specification table 2 column 3
@@ -204,6 +205,41 @@ function get_mcs(trials;
         rv_name = Symbol("rv_β_mortality_$(cromar_mapping_raw.cromar_region[row])")
         add_transform!(mcs, :CromarMortality, :β_mortality, :(=), rv_name, [cromar_mapping_raw.ISO3[row]])
     end
+
+
+    ## add subnational damages uncertainty
+    add_RV!(mcs, :rv_subnat_modelnum, EmpiricalDistribution(collect(1:1:21)))
+    add_transform!(mcs, :subnat_damages, :modelnum, :(=), :rv_subnat_modelnum)
+    #add_RV!(mcs, :rv_hs_damage_t2_base_8, SampleStore(hs_coefficients_8[1,:]))
+    #add_transform!(mcs,  :hs_damage, :t2_base_8, :(=), :rv_hs_damage_t2_base_8)
+
+    #subnat_params = load(joinpath(@__DIR__, "..", "data","subnat_dam_params","PERC_scaling_coefs_ssp1_lagdiff_lintren_NL_3_fixflex__N=100.csv")) |> DataFrame
+    #subnat_countries = subnat_params[:,"iso"]
+    #model_num = rand(collect(1:1:21))
+
+    #for countryind in 1:size(subnat_countries)
+
+
+    #beta2=subnat_params[:,"m" * string(model_num) * "_beta2"]
+    #beta1=subnat_params[:,"m" * string(model_num) * "_beta1"]
+    #maxGMT=subnat_params[:,"m" * string(model_num) * "_maxGMT"]
+    #set_param!(m, :subnat_damages, :beta1, beta1)
+    #set_param!(m, :subnat_damages, :beta2, beta2)
+    #set_param!(m, :subnat_damages, :maxGMT, maxGMT)
+    #add_RV!(mcs, )
+
+    #rv_name0 = "m" * string(model_num) * "_maxGMT"
+    #rv_name1 = "m" * string(model_num) * "_beta1"
+    #rv_name2 = "m" * string(model_num) * "_beta2"
+    #add_RV!(mcs, rv_name0, )
+    #add_transform!(mcs, :subnat_damages, :maxGMT, :(=), subnat_params[:,rv_name0]) #, [subnat_countries])
+    #add_transform!(mcs, :subnat_damages, :beta1, :(=), subnat_params[:,rv_name1]) #, [subnat_countries])
+    #add_transform!(mcs, :subnat_damages, :beta2, :(=), subnat_params[:,rv_name2]) #, [subnat_countries])
+
+    #model_num = rand(collect(1:1:21))
+    #subnat_damages.maxGMT = subnat_params[:,"m" * string(model_num) * "_maxGMT"]
+    #subnat_damages.beta1 = subnat_params[:,"m" * string(model_num) * "_beta1"]
+    #subnat_damages.beta2 = subnat_params[:,"m" * string(model_num) * "_beta2"]
 
     # add the FAIR random variables and transforms - note this could be done within
     # the @defsim macro but we can use the dictionary to make this less verbose

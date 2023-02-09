@@ -142,12 +142,19 @@ function get_model(; Agriculture_gtap::String = "midDF",
     damages_first = 2020
     model_last = 2300
 
+    # kotz GCM samples
+    gcm1 = 1
+    gcm2 = 21
+
 	# Start with an instance of the FAIR model.
 	m = MimiFAIRv1_6_2.get_model(start_year=model_first, end_year=model_last, ar6_scenario = ar6_scenario)
 
     # Set Dimensions
     set_dimension!(m, :time, model_first:model_last) # used in all components - already set in FAIR but reset for clarity
     set_dimension!(m, :country, countries) # used in most components
+
+    #gcm_dim = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
+    set_dimension!(m, :gcms, 1:21) # GCM sample for Kotz subnational damages
 
     set_dimension!(m, :fund_regions, fund_regions) # Agriculture components
     set_dimension!(m, :segments, segment_fingerprints.segments) # BRICK components
@@ -628,16 +635,22 @@ function get_model(; Agriculture_gtap::String = "midDF",
     # --------------------------------------------------------------------------
 
     # Load raw data of damage coefficients from numpy array. at first just take ssp585 and the first climate model
-    subnat_params = load(joinpath(@__DIR__, "..", "data","subnat_dam_params","PERC_scaling_coefs_ssp1_lagdiff_lintren_NL_3_fixflex__N=100.csv")) |> DataFrame
-
-    model_num=1
-    beta2=subnat_params[:,"m" * string(model_num) * "_beta2"]
-    beta1=subnat_params[:,"m" * string(model_num) * "_beta1"]
-    maxGMT=subnat_params[:,"m" * string(model_num) * "_maxGMT"]
-    set_param!(m, :subnat_damages, :beta1, beta1)
-    set_param!(m, :subnat_damages, :beta2, beta2)
-    set_param!(m, :subnat_damages, :maxGMT, maxGMT)
-    #set_param!(m, :subnat_damages, :subnat_params, subnat_params)
+    #subnat_params = load(joinpath(@__DIR__, "..", "data","subnat_dam_params","PERC_scaling_coefs_ssp1_lagdiff_lintren_NL_3_fixflex__N=100.csv")) |> DataFrame
+    beta1_params = load(joinpath(@__DIR__, "..", "data","subnat_dam_params","PERC_scaling_coefs_ssp1_lagdiff_lintren_NL_3_fixflex__N=100_beta1_signflip.csv")) |> DataFrame
+    beta2_params = load(joinpath(@__DIR__, "..", "data","subnat_dam_params","PERC_scaling_coefs_ssp1_lagdiff_lintren_NL_3_fixflex__N=100_beta2_signflip.csv")) |> DataFrame
+    beta1_matrix = Matrix(beta1_params)[:,2:end]
+    beta2_matrix = Matrix(beta2_params)[:,2:end]
+    # we'll use the first climate model for default parameters 
+    #model_num=1
+    #beta2=subnat_params[:,"m" * string(model_num) * "_beta2"]
+    #beta1=subnat_params[:,"m" * string(model_num) * "_beta1"]
+    #maxGMT=subnat_params[:,"m" * string(model_num) * "_maxGMT"]
+    #set_param!(m, :subnat_damages, :beta1, beta1)
+    #set_param!(m, :subnat_damages, :beta2, beta2)
+    #set_param!(m, :subnat_damages, :maxGMT, maxGMT)
+    ##set_param!(m, :subnat_damages, :subnat_params, subnat_params)
+    set_param!(m, :subnat_damages, :beta1, beta1_matrix)
+    set_param!(m, :subnat_damages, :beta2, beta2_matrix)
     connect_param!(m, :subnat_damages => :temperature, :TempNorm_2020 => :global_temperature_norm)
     connect_param!(m, :subnat_damages => :gdp, :Socioeconomic => :gdp)
 
