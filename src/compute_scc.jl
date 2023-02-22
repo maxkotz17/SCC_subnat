@@ -71,7 +71,8 @@ function run_subnatdam(seed)
 	update_param!(m, :DamageAggregator, :include_subnatdam, true)
 
 	run(m)	
-	return getdataframe(m, :DamageAggregator=>:total_damage_share) 
+	#return getdataframe(m, :DamageAggregator=>:total_damage_share) 
+    return getdataframe(m, :DamageAggregator=>:total_damage) 
 end
 
 
@@ -83,6 +84,7 @@ function run_dice(seed)
 	update_param!(m, :DamageAggregator, :include_ag, false)
 	update_param!(m, :DamageAggregator, :include_slr, false)
 	update_param!(m, :DamageAggregator, :include_energy, false)
+    update_param!(m, :DamageAggregator, :include_subnatdam, false)
 	update_param!(m, :DamageAggregator, :include_dice2016R2, true)
 
 	run(m)
@@ -98,6 +100,7 @@ function compute_dice_scc(num_trials, seed)
     update_param!(m, :DamageAggregator, :include_ag, false)
     update_param!(m, :DamageAggregator, :include_slr, false)
     update_param!(m, :DamageAggregator, :include_energy, false)
+    update_param!(m, :DamageAggregator, :include_subnatdam, false)
     update_param!(m, :DamageAggregator, :include_dice2016R2, true)
 
     results = MimiGIVE.compute_scc(m;

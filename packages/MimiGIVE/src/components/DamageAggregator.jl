@@ -38,6 +38,7 @@ using Mimi
     agriculture_damage_domestic              = Variable(index=[time], unit="US\$2005/yr")
     energy_damage_domestic                   = Variable(index=[time], unit="US\$2005/yr")
   
+    #print("hello world damage_aggregator")
 
     function run_timestep(p, v, d, t)
 
